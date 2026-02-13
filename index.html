@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f0f14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ЭлектроТест">
+  <link rel="manifest" href="manifest.json">
+  <title>ЭлектроТест — Подготовка к экзамену</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f14;
+      --surface: #16161f;
+      --surface2: #1e1e2a;
+      --surface3: #252535;
+      --border: #2a2a3f;
+      --accent: #f0c040;
+      --accent2: #e07830;
+      --success: #3dba78;
+      --danger: #e84560;
+      --text: #e8e8f0;
+      --text2: #9898b8;
+      --text3: #5a5a78;
+      --radius: 12px;
+      --radius-lg: 18px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Geologica', sans-serif;
+      font-weight: 400;
+      overflow: hidden;
+    }
+
+    /* ========== APP SHELL ========== */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ========== VIEWS ========== */
+    .view { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .view.active { display: flex; }
+
+    /* ========== TOP BAR ========== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px 12px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .topbar-back {
+      width: 36px; height: 36px;
+      border: none; background: var(--surface2);
+      border-radius: 10px; cursor: pointer;
+      color: var(--text2); font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .topbar-back:hover { background: var(--surface3); color: var(--text); }
+    .topbar h2 { font-size: 17px; font-weight: 600; flex: 1; }
+    .topbar-badge {
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 12px; font-weight: 600;
+      padding: 4px 10px; border-radius: 20px;
+    }
+
+    /* ========== HOME VIEW ========== */
+    #view-home {
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    .home-header {
+      padding: 40px 24px 20px;
+      position: relative;
+    }
+    .home-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 2px;
+      line-height: 1;
+      color: var(--text);
+    }
+    .home-logo span { color: var(--accent); }
+    .home-sub {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 6px;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+    }
+
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 0 24px 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 1px;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 4px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text3);
+      padding: 0 24px 10px;
+    }
+
+    .mode-list { padding: 0 20px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+    .mode-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .mode-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .mode-card:hover::before, .mode-card:active::before { opacity: 1; }
+    .mode-card.mode-random::before { background: linear-gradient(135deg, rgba(240,192,64,.06) 0%, transparent 60%); }
+    .mode-card.mode-ticket::before { background: linear-gradient(135deg, rgba(224,120,48,.06) 0%, transparent 60%); }
+    .mode-card.mode-unlearned::before { background: linear-gradient(135deg, rgba(61,186,120,.06) 0%, transparent 60%); }
+    .mode-card.mode-list::before { background: linear-gradient(135deg, rgba(152,152,184,.06) 0%, transparent 60%); }
+
+    .mode-card:hover { transform: translateY(-1px); border-color: var(--surface3); }
+    .mode-card:active { transform: scale(.98); }
+
+    .mode-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .mode-random .mode-icon { background: rgba(240,192,64,.15); }
+    .mode-ticket .mode-icon { background: rgba(224,120,48,.15); }
+    .mode-unlearned .mode-icon { background: rgba(61,186,120,.15); }
+    .mode-list .mode-icon { background: rgba(152,152,184,.12); }
+
+    .mode-info { flex: 1; }
+    .mode-title { font-size: 16px; font-weight: 600; }
+    .mode-desc { font-size: 12px; color: var(--text2); margin-top: 3px; line-height: 1.4; }
+    .mode-arrow { color: var(--text3); font-size: 18px; }
+
+    .mode-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--surface2);
+      color: var(--text3);
+    }
+    .mode-badge.has-items { background: rgba(61,186,120,.15); color: var(--success); }
+
+    /* ========== QUIZ VIEW ========== */
+    #view-quiz {
+      display: none;
+      flex-direction: column;
+    }
+    #view-quiz.active { display: flex; }
+
+    .quiz-progress-bar {
+      height: 3px;
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    .quiz-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      transition: width .4s ease;
+    }
+
+    .quiz-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .quiz-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .quiz-counter {
+      font-size: 12px;
+      color: var(--text3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .quiz-streak {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .streak-dots { display: flex; gap: 4px; }
+    .streak-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--surface3);
+      transition: all .3s;
+    }
+    .streak-dot.filled { background: var(--success); box-shadow: 0 0 6px rgba(61,186,120,.4); }
+
+    .question-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+    .question-id {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .question-text {
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .answers-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+
+    .answer-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      text-align: left;
+      font-family: 'Geologica', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+      transition: all .2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      position: relative;
+    }
+    .answer-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: rgba(240,192,64,.05);
+      transform: translateX(2px);
+    }
+    .answer-btn:disabled { cursor: default; }
+
+    .answer-letter {
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text3);
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+    .answer-text { flex: 1; }
+
+    .answer-btn.correct {
+      border-color: var(--success);
+      background: rgba(61,186,120,.08);
+      animation: correctPulse .4s ease;
+    }
+    .answer-btn.correct .answer-letter {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+
+    .answer-btn.wrong {
+      border-color: var(--danger);
+      background: rgba(232,69,96,.06);
+    }
+    .answer-btn.wrong .answer-letter {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+
+    .answer-btn.reveal {
+      border-color: var(--success);
+      background: rgba(61,186,120,.05);
+      opacity: .6;
+    }
+
+    @keyframes correctPulse {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.01); }
+      100% { transform: scale(1); }
+    }
+
+    .quiz-result-panel {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+    }
+    .quiz-result-panel.correct {
+      display: flex;
+      background: rgba(61,186,120,.1);
+      border: 1px solid rgba(61,186,120,.2);
+    }
+    .quiz-result-panel.wrong {
+      display: flex;
+      background: rgba(232,69,96,.08);
+      border: 1px solid rgba(232,69,96,.18);
+    }
+    .result-icon { font-size: 22px; flex-shrink: 0; }
+    .result-text { font-size: 13px; line-height: 1.5; }
+    .result-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+
+    .quiz-nav {
+      display: flex;
+      gap: 10px;
+      padding: 0 20px 20px;
+      flex-shrink: 0;
+    }
+    .btn-next {
+      flex: 1;
+      background: var(--accent);
+      color: #0f0f14;
+      border: none;
+      border-radius: var(--radius);
+      padding: 16px;
+      font-family: 'Geologica', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      letter-spacing: 0.3px;
+    }
+    .btn-next:hover { background: #f5ce60; transform: translateY(-1px); }
+    .btn-next:active { transform: scale(.98); }
+    .btn-next:disabled { background: var(--surface2); color: var(--text3); cursor: default; transform: none; }
+
+    .btn-skip {
+      background: var(--surface2);
+      color: var(--text2);
+      border: none;
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      font-family: 'Geologica', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-skip:hover { background: var(--surface3); }
+
+    /* ========== TICKET MODE ========== */
+    .ticket-header {
+      text-align: center;
+      padding: 20px 24px 4px;
+    }
+    .ticket-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      letter-spacing: 2px;
+      color: var(--accent);
+    }
+    .ticket-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+    .ticket-dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      padding: 12px 24px 16px;
+      flex-wrap: wrap;
+    }
+    .ticket-dot {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text3);
+      transition: all .2s;
+    }
+    .ticket-dot.current { border-color: var(--accent); color: var(--accent); }
+    .ticket-dot.answered-correct { background: rgba(61,186,120,.15); border-color: var(--success); color: var(--success); }
+    .ticket-dot.answered-wrong { background: rgba(232,69,96,.1); border-color: var(--danger); color: var(--danger); }
+
+    /* ========== RESULTS VIEW ========== */
+    #view-results {
+      overflow-y: auto;
+    }
+
+    .results-hero {
+      text-align: center;
+      padding: 30px 24px 20px;
+    }
+    .results-score {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 80px;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+    .results-score.great { color: var(--success); }
+    .results-score.ok { color: var(--accent); }
+    .results-score.bad { color: var(--danger); }
+    .results-label { font-size: 14px; color: var(--text2); margin-top: 4px; }
+    .results-msg { font-size: 22px; font-weight: 700; margin-top: 16px; }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 0 20px 20px;
+    }
+    .results-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .results-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; line-height: 1; }
+    .results-stat-num.correct-col { color: var(--success); }
+    .results-stat-num.wrong-col { color: var(--danger); }
+    .results-stat-lbl { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+
+    .results-actions { padding: 0 20px 30px; display: flex; flex-direction: column; gap: 10px; }
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: #0f0f14;
+      border: none;
+      border-radius: var(--radius);
+      padding: 16px;
+      font-family: 'Geologica', sans-serif;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-primary:hover { background: #f5ce60; }
+    .btn-secondary {
+      width: 100%;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      font-family: 'Geologica', sans-serif;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-secondary:hover { background: var(--surface3); }
+
+    /* ========== QUESTIONS LIST VIEW ========== */
+    #view-list { overflow: hidden; }
+
+    .list-search-bar {
+      padding: 12px 20px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .list-search-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-family: 'Geologica', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .list-search-input::placeholder { color: var(--text3); }
+    .list-search-input:focus { border-color: var(--accent); }
+
+    .list-scroll { flex: 1; overflow-y: auto; }
+
+    .question-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+      cursor: pointer;
+    }
+    .question-list-item:hover { background: var(--surface); }
+
+    .qli-num {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 700;
+      min-width: 30px;
+      flex-shrink: 0;
+    }
+    .qli-text {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.4;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .qli-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .qli-pct {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text2);
+    }
+    .qli-pct.high { color: var(--success); }
+    .qli-pct.mid { color: var(--accent); }
+    .qli-pct.low { color: var(--danger); }
+
+    .qli-star {
+      width: 26px; height: 26px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .2s;
+      background: transparent;
+      color: var(--text3);
+    }
+    .qli-star:hover { border-color: var(--accent); color: var(--accent); }
+    .qli-star.marked { background: rgba(240,192,64,.12); border-color: var(--accent); color: var(--accent); }
+
+    .qli-streak {
+      display: flex;
+      gap: 2px;
+    }
+    .qli-streak-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--surface3);
+    }
+    .qli-streak-dot.ok { background: var(--success); }
+
+    /* ========== LOADING ========== */
+    #loading {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px;
+      z-index: 100;
+    }
+    .loading-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px;
+      letter-spacing: 2px;
+      color: var(--text);
+    }
+    .loading-logo span { color: var(--accent); }
+    .loading-bar {
+      width: 120px; height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .loading-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      animation: loadingSlide 1.2s ease-in-out infinite;
+    }
+    @keyframes loadingSlide {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(0); }
+      100% { transform: translateX(100%); }
+    }
+    .loading-text { font-size: 13px; color: var(--text3); }
+
+    /* ========== SCROLLBAR ========== */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+
+    /* ========== TOAST ========== */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface3);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all .3s;
+      pointer-events: none;
+      z-index: 200;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+      gap: 12px;
+    }
+    .empty-icon { font-size: 48px; }
+    .empty-title { font-size: 18px; font-weight: 700; }
+    .empty-desc { font-size: 14px; color: var(--text2); line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loading-logo">Электро<span>Тест</span></div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+  <div class="loading-text">Загрузка вопросов...</div>
+</div>
+
+<div id="app">
+
+  <!-- HOME -->
+  <div id="view-home" class="view active">
+    <div class="home-header">
+      <div class="home-logo">Электро<span>Тест</span></div>
+      <div class="home-sub">Подготовка к аттестации по электробезопасности</div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">Вопросов</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-learned">0</div>
+        <div class="stat-label">Выучено</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-pct">0%</div>
+        <div class="stat-label">Прогресс</div>
+      </div>
+    </div>
+
+    <div class="section-label">Режим тренировки</div>
+    <div class="mode-list">
+      <div class="mode-card mode-random" onclick="startMode('random')">
+        <div class="mode-icon">🎲</div>
+        <div class="mode-info">
+          <div class="mode-title">Случайные вопросы</div>
+          <div class="mode-desc">Вопросы в случайном порядке, без повторений</div>
+        </div>
+        <div class="mode-arrow">›</div>
+      </div>
+
+      <div class="mode-card mode-ticket" onclick="startMode('ticket')">
+        <div class="mode-icon">📋</div>
+        <div class="mode-info">
+          <div class="mode-title">Билеты</div>
+          <div class="mode-desc">10 случайных вопросов в одном билете</div>
+        </div>
+        <div class="mode-arrow">›</div>
+      </div>
+
+      <div class="mode-card mode-unlearned" onclick="startMode('unlearned')">
+        <div class="mode-icon">⚡</div>
+        <div class="mode-info">
+          <div class="mode-title">Не выученные</div>
+          <div class="mode-desc">Вопросы без 3 правильных ответов подряд</div>
+        </div>
+        <div id="unlearned-badge" class="mode-badge">0</div>
+      </div>
+
+      <div class="mode-card mode-list" onclick="showView('list')">
+        <div class="mode-icon">📚</div>
+        <div class="mode-info">
+          <div class="mode-title">Все вопросы</div>
+          <div class="mode-desc">Просмотр, статистика и управление вопросами</div>
+        </div>
+        <div class="mode-arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="view-quiz" class="view">
+    <div class="topbar">
+      <button class="topbar-back" onclick="confirmExitQuiz()">✕</button>
+      <h2 id="quiz-mode-title">Тренировка</h2>
+      <span class="topbar-badge" id="quiz-badge">1/10</span>
+    </div>
+    <div class="quiz-progress-bar">
+      <div class="quiz-progress-fill" id="quiz-progress" style="width:0%"></div>
+    </div>
+
+    <!-- Ticket dots (only in ticket mode) -->
+    <div id="ticket-header" style="display:none">
+      <div class="ticket-header">
+        <div class="ticket-title" id="ticket-num-label">БИЛЕТ #1</div>
+        <div class="ticket-sub">Ответьте на все вопросы</div>
+      </div>
+      <div class="ticket-dots" id="ticket-dots"></div>
+    </div>
+
+    <div class="quiz-scroll">
+      <div class="quiz-meta">
+        <div class="quiz-counter" id="quiz-counter">Вопрос 1</div>
+        <div class="quiz-streak">
+          <span style="font-size:11px;color:var(--text3);margin-right:2px">Серия:</span>
+          <div class="streak-dots">
+            <div class="streak-dot" id="sd0"></div>
+            <div class="streak-dot" id="sd1"></div>
+            <div class="streak-dot" id="sd2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card">
+        <div class="question-id" id="question-id-label"></div>
+        <div class="question-text" id="question-text"></div>
+      </div>
+
+      <div class="answers-list" id="answers-list"></div>
+      <div class="quiz-result-panel" id="result-panel">
+        <div class="result-icon" id="result-icon"></div>
+        <div class="result-text" id="result-text"></div>
+      </div>
+    </div>
+
+    <div class="quiz-nav">
+      <button class="btn-skip" onclick="skipQuestion()">Пропустить</button>
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()" disabled>Следующий →</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="view-results" class="view">
+    <div class="topbar">
+      <button class="topbar-back" onclick="showView('home')">←</button>
+      <h2>Результаты</h2>
+    </div>
+    <div class="results-hero">
+      <div class="results-score" id="results-score-pct">0%</div>
+      <div class="results-label">правильных ответов</div>
+      <div class="results-msg" id="results-msg"></div>
+    </div>
+    <div class="results-grid">
+      <div class="results-stat">
+        <div class="results-stat-num correct-col" id="res-correct">0</div>
+        <div class="results-stat-lbl">Правильно</div>
+      </div>
+      <div class="results-stat">
+        <div class="results-stat-num wrong-col" id="res-wrong">0</div>
+        <div class="results-stat-lbl">Неверно</div>
+      </div>
+    </div>
+    <div class="results-actions">
+      <button class="btn-primary" onclick="restartQuiz()">Ещё раз</button>
+      <button class="btn-secondary" onclick="showView('home')">На главную</button>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div id="view-list" class="view">
+    <div class="topbar">
+      <button class="topbar-back" onclick="showView('home')">←</button>
+      <h2>Все вопросы</h2>
+      <span class="topbar-badge" id="list-badge">0</span>
+    </div>
+    <div class="list-search-bar">
+      <input class="list-search-input" id="list-search" type="text" placeholder="Поиск по тексту вопроса..." oninput="renderList()">
+    </div>
+    <div class="list-scroll" id="list-scroll"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
