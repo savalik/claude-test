@@ -164,7 +164,7 @@ def _extract_question_text(element) -> str:
 
         # Ищем текст в различных элементах
         for tag in ["h3", "h4", "h5", "p", "label", "span", "div"]:
-            text_el = parent.find(tag, class_=re.compile(r"question|title|text", re.I))
+            text_el = parent.find(tag, class_=re.compile(r"question__text", re.I))
             if text_el:
                 return text_el.get_text(strip=True)
 
