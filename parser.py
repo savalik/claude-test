@@ -5,9 +5,7 @@
 Алгоритм:
 1. Получает сессию и CSRF-токен
 2. Загружает все вопросы постранично через /ticket/ordered/
-3. Для каждого вопроса перебирает варианты ответов через POST /ticket/check
-4. Определяет правильный ответ по ответу сервера
-5. Сохраняет результат в JSON-файл
+3. Сохраняет результат в JSON-файл (правильные ответы берутся из is_correct в ответах)
 """
 
 import argparse
@@ -281,196 +279,27 @@ def fetch_all_questions(
     return all_questions
 
 
-def check_answer(
-    session: requests.Session,
-    test_id: int,
-    csrf_token: str,
-    question: dict,
-    answer_index: int,
-    page: int,
-) -> dict:
-    """
-    Отправляет ответ на проверку и возвращает результат.
-
-    Отправляем один вопрос с одним выбранным ответом.
-    """
-    url = f"{BASE_URL}/ticket/check"
-    params = {
-        "ordered": "true",
-        "ticketNum": 1,
-        "page": page,
-    }
-
-    form_data = {
-        "_csrf": csrf_token,
-        "testId": str(test_id),
-        "errorsCount": "0",
-        f"questionList[0].id": str(question["id"]),
-        f"questionList[0].answers[{answer_index}].checked": "on",
-    }
-
-    # Добавляем ID ответов если есть
-    for ans in question["answers"]:
-        idx = ans["index"]
-        if ans.get("id") is not None:
-            form_data[f"questionList[0].answers[{idx}].id"] = str(ans["id"])
-
-    resp = session.post(url, params=params, data=form_data)
-    resp.raise_for_status()
-
-    return _parse_check_response(resp.text, question, answer_index)
-
-
-def _parse_check_response(
-    html: str,
-    question: dict,
-    submitted_answer_index: int,
-) -> dict:
-    """
-    Анализирует ответ сервера после проверки.
-
-    Возвращает:
-    {
-        "correct": True/False,
-        "correct_answer_index": int | None,
-        "errors_count": int | None,
-    }
-    """
-    soup = BeautifulSoup(html, "html.parser")
-
-    result = {
-        "correct": False,
-        "correct_answer_index": None,
-        "errors_count": None,
-    }
-
-    # Паттерн 1: ищем элемент с классом, указывающим на ошибку/успех
-    error_el = soup.find(class_=re.compile(r"error|wrong|incorrect|danger", re.I))
-    success_el = soup.find(class_=re.compile(r"success|correct|right", re.I))
-
-    if success_el and not error_el:
-        result["correct"] = True
-        result["correct_answer_index"] = submitted_answer_index
-        return result
-
-    # Паттерн 2: ищем errorsCount в ответе
-    errors_input = soup.find("input", attrs={"name": "errorsCount"})
-    if errors_input:
-        try:
-            result["errors_count"] = int(errors_input["value"])
-            if result["errors_count"] == 0:
-                result["correct"] = True
-                result["correct_answer_index"] = submitted_answer_index
-                return result
-        except (ValueError, KeyError):
-            pass
-
-    # Паттерн 3: Ищем подсветку правильного ответа
-    for ans in question["answers"]:
-        idx = ans["index"]
-        name = f"questionList[0].answers[{idx}].checked"
-        input_el = soup.find("input", attrs={"name": name})
-        if input_el:
-            parent = input_el.parent
-            if parent:
-                classes = " ".join(parent.get("class", []))
-                if re.search(r"correct|right|success|green", classes, re.I):
-                    result["correct_answer_index"] = idx
-                    result["correct"] = (idx == submitted_answer_index)
-                    return result
-
-    # Паттерн 4: текстовый анализ — ищем "ошибок: 0" или подобное
-    text = soup.get_text()
-    err_match = re.search(r"ошиб\w*[:\s]*(\d+)", text, re.I)
-    if err_match:
-        errors = int(err_match.group(1))
-        result["errors_count"] = errors
-        if errors == 0:
-            result["correct"] = True
-            result["correct_answer_index"] = submitted_answer_index
-
-    return result
-
-
-def find_correct_answers(
-    session: requests.Session,
-    test_id: int,
-    csrf_token: str,
-    questions: list[dict],
-    delay: float = REQUEST_DELAY,
-) -> list[dict]:
-    """
-    Для каждого вопроса перебирает ответы и находит правильный.
-
-    Возвращает список вопросов с добавленным полем correct_answer.
-    """
-    results = []
-
-    for i, question in enumerate(questions):
-        q_num = i + 1
-        print(f"\n[{q_num}/{len(questions)}] {question['text'][:80]}...")
-
-        correct_found = False
-        for ans in question["answers"]:
-            a_idx = ans["index"]
-            print(f"  Проверяю вариант {a_idx}: {ans['text'][:60]}...", end=" ")
-
-            # Может понадобиться обновить CSRF-токен
-            try:
-                check_result = check_answer(
-                    session, test_id, csrf_token, question, a_idx, page=i,
-                )
-            except requests.HTTPError as e:
-                if e.response is not None and e.response.status_code == 403:
-                    print("CSRF expired, обновляю токен...")
-                    csrf_token = get_csrf_token(session, test_id)
-                    check_result = check_answer(
-                        session, test_id, csrf_token, question, a_idx, page=i,
-                    )
-                else:
-                    raise
-
-            if check_result["correct"]:
-                print("✓ ПРАВИЛЬНО")
-                question["correct_answer"] = ans
-                correct_found = True
-                break
-            else:
-                print("✗")
-
-            time.sleep(delay)
-
-        if not correct_found:
-            print("  ⚠ Правильный ответ не определён")
-            question["correct_answer"] = None
-
-        results.append(question)
-        time.sleep(delay)
-
-    return results
-
-
 def save_results(results: list[dict], output_file: str) -> None:
     """Сохраняет результаты в JSON-файл."""
-    # Подготавливаем чистый вывод
     output = []
     for q in results:
-        entry = {
+        correct_answer = None
+        answers = []
+        for a in q["answers"]:
+            answers.append({
+                "index": a["index"],
+                "text": a["text"],
+                "is_correct": a.get("is_correct", False),
+            })
+            if a.get("is_correct"):
+                correct_answer = {"index": a["index"], "text": a["text"]}
+
+        output.append({
             "id": q["id"],
             "question": q["text"],
-            "answers": [
-                {"index": a["index"], "text": a["text"]}
-                for a in q["answers"]
-            ],
-        }
-        if q.get("correct_answer"):
-            entry["correct_answer"] = {
-                "index": q["correct_answer"]["index"],
-                "text": q["correct_answer"]["text"],
-            }
-        else:
-            entry["correct_answer"] = None
-        output.append(entry)
+            "answers": answers,
+            "correct_answer": correct_answer,
+        })
 
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
@@ -495,21 +324,10 @@ def main():
         help=f"Размер страницы для загрузки вопросов (по умолчанию: {DEFAULT_PAGE_SIZE})",
     )
     parser.add_argument(
-        "--delay",
-        type=float,
-        default=REQUEST_DELAY,
-        help=f"Задержка между запросами в секундах (по умолчанию: {REQUEST_DELAY})",
-    )
-    parser.add_argument(
         "--output",
         "-o",
         default="results.json",
         help="Выходной файл (по умолчанию: results.json)",
-    )
-    parser.add_argument(
-        "--questions-only",
-        action="store_true",
-        help="Только загрузить вопросы без поиска правильных ответов",
     )
     args = parser.parse_args()
 
@@ -533,22 +351,8 @@ def main():
         print("Вопросы не найдены. Проверьте test_id.", file=sys.stderr)
         sys.exit(1)
 
-    if args.questions_only:
-        save_results(questions, args.output)
-        return
-
-    # 3. Находим правильные ответы
-    print("\nПоиск правильных ответов...")
-    results = find_correct_answers(
-        session, args.test_id, csrf_token, questions, args.delay,
-    )
-
-    # 4. Сохраняем результаты
-    save_results(results, args.output)
-
-    # Статистика
-    found = sum(1 for q in results if q.get("correct_answer"))
-    print(f"\nНайдено правильных ответов: {found}/{len(results)}")
+    # 3. Сохраняем результаты
+    save_results(questions, args.output)
 
 
 if __name__ == "__main__":
