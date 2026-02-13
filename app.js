@@ -211,10 +211,10 @@ function startMode(mode) {
   // Set up UI
   document.getElementById('quiz-mode-title').textContent =
     mode === 'random' ? 'Случайные вопросы' :
-    mode === 'ticket' ? 'Билет' : 'Не выученные';
+    mode === 'ticket' ? 'Билет #' + (_ticketNum || 1) : 'Не выученные';
 
-  const ticketHeader = document.getElementById('ticket-header');
-  ticketHeader.style.display = mode === 'ticket' ? 'block' : 'none';
+  const ticketDots = document.getElementById('ticket-dots');
+  ticketDots.style.display = mode === 'ticket' ? 'flex' : 'none';
   if (mode === 'ticket') renderTicketDots();
 
   showView('quiz');
@@ -230,7 +230,7 @@ function startNewTicket() {
 // ─── TICKET DOTS ─────────────────────────────────────────────
 function renderTicketDots() {
   const container = document.getElementById('ticket-dots');
-  document.getElementById('ticket-num-label').textContent = 'БИЛЕТ #' + (_ticketNum || 1);
+  document.getElementById('quiz-mode-title').textContent = 'Билет #' + (_ticketNum || 1);
   container.innerHTML = '';
   session.queue.forEach((id, i) => {
     const dot = document.createElement('div');
@@ -598,7 +598,7 @@ function startSingleQuestion(qId) {
   session.ticketAnswers = {};
 
   document.getElementById('quiz-mode-title').textContent = 'Вопрос';
-  document.getElementById('ticket-header').style.display = 'none';
+  document.getElementById('ticket-dots').style.display = 'none';
   showView('quiz');
   renderQuestion();
 }

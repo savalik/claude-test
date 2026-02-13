@@ -259,9 +259,9 @@
     .question-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 22px;
-      margin-bottom: 16px;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
     }
     .question-id {
       font-size: 11px;
@@ -269,32 +269,32 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
     .question-text {
-      font-size: 15px;
-      line-height: 1.65;
+      font-size: 14px;
+      line-height: 1.6;
       color: var(--text);
       font-weight: 500;
     }
 
-    .answers-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .answers-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
 
     .answer-btn {
       background: var(--surface);
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 16px;
+      padding: 10px 12px;
       cursor: pointer;
       text-align: left;
       font-family: 'Geologica', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text);
       line-height: 1.5;
       transition: all .2s;
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 10px;
       position: relative;
     }
     .answer-btn:hover:not(:disabled) {
@@ -305,12 +305,12 @@
     .answer-btn:disabled { cursor: default; }
 
     .answer-letter {
-      width: 26px; height: 26px;
-      border-radius: 8px;
+      width: 22px; height: 22px;
+      border-radius: 6px;
       background: var(--surface2);
       border: 1.5px solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--text3);
       flex-shrink: 0;
@@ -411,28 +411,19 @@
     .btn-skip:hover { background: var(--surface3); }
 
     /* ========== TICKET MODE ========== */
-    .ticket-header {
-      text-align: center;
-      padding: 20px 24px 4px;
-    }
-    .ticket-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 36px;
-      letter-spacing: 2px;
-      color: var(--accent);
-    }
-    .ticket-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
-
     .ticket-dots {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       justify-content: center;
-      padding: 12px 24px 16px;
+      padding: 8px 20px;
       flex-wrap: wrap;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
     .ticket-dot {
-      width: 28px; height: 28px;
-      border-radius: 8px;
+      width: 26px; height: 26px;
+      border-radius: 7px;
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; font-weight: 700;
       cursor: pointer;
@@ -767,13 +758,7 @@
     </div>
 
     <!-- Ticket dots (only in ticket mode) -->
-    <div id="ticket-header" style="display:none">
-      <div class="ticket-header">
-        <div class="ticket-title" id="ticket-num-label">БИЛЕТ #1</div>
-        <div class="ticket-sub">Ответьте на все вопросы</div>
-      </div>
-      <div class="ticket-dots" id="ticket-dots"></div>
-    </div>
+    <div class="ticket-dots" id="ticket-dots" style="display:none"></div>
 
     <div class="quiz-scroll">
       <div class="quiz-meta">
