@@ -1,10 +1,12 @@
-const CACHE_NAME = 'electro-test-v1';
+const CACHE_NAME = 'electro-test-v2';
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
-  './results.json'
+  './results.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', event => {
