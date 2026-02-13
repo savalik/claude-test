@@ -189,12 +189,12 @@ def _extract_answers(soup: BeautifulSoup, q_index: int) -> list[dict]:
         if not match:
             continue
         a_index = int(match.group(1))
-        answer_text = _extract_answer_text(a_input)
-        answer_id = _find_answer_id_near(soup, q_index, a_index)
+
         answers.append({
-            "id": answer_id,
+            "id": _find_answer_id_near(soup, q_index, a_index),
             "index": a_index,
-            "text": answer_text,
+            "text":  _extract_answer_text(a_input),
+            "is_correct": _find_answer_is_correct(soup, q_index, a_index)
         })
 
     return answers
@@ -242,6 +242,16 @@ def _find_answer_id_near(soup, q_index: int, a_index: int) -> int | None:
     )
     if hidden:
         return int(hidden["value"])
+    return None
+
+def _find_answer_is_correct(soup, q_index: int, a_index: int) -> bool | None:
+    """Ищет скрытое поле с ID ответа."""
+    hidden = soup.find(
+        "input",
+        attrs={"name": f"questionList[{q_index}].answers[{a_index}].correct"},
+    )
+    if hidden:
+        return hidden["value"] == "true"
     return None
 
 
