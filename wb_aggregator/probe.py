@@ -18,7 +18,8 @@ import requests
 from .config import (
     Constraints,
     APP_TYPE, CARD_URL, CURR, DEST, FILTERS_URL, HEADERS, LANG,
-    PAUSE_SECONDS, REQUEST_TIMEOUT, SEARCH_HOSTS, SEARCH_QUERY, TARGET_SELLERS,
+    PAUSE_SECONDS, RELAY_TOKEN, RELAY_URL, REQUEST_TIMEOUT, SEARCH_HOSTS,
+    SEARCH_QUERY, TARGET_SELLERS,
 )
 from .normalize import parse_price
 
@@ -28,9 +29,23 @@ class WbError(Exception):
     pass
 
 
+def _fetch(url: str, params: dict, timeout: int) -> requests.Response:
+    if RELAY_URL:
+        # relay сам добавляет HEADERS на своей стороне из X-Fwd-* — здесь
+        # только токен и итоговый URL с уже подставленными params.
+        target = requests.Request("GET", url, params=params).prepare().url
+        forward_headers = {f"X-Fwd-{k}": v for k, v in HEADERS.items()}
+        forward_headers["X-Relay-Token"] = RELAY_TOKEN
+        return requests.get(
+            RELAY_URL, params={"target": target}, headers=forward_headers,
+            timeout=timeout + 10,
+        )
+    return requests.get(url, params=params, headers=HEADERS, timeout=timeout)
+
+
 def get_json(url: str, params: dict, timeout: int = REQUEST_TIMEOUT) -> Any:
     time.sleep(PAUSE_SECONDS)
-    r = requests.get(url, params=params, headers=HEADERS, timeout=timeout)
+    r = _fetch(url, params, timeout)
     if r.status_code == 429:
         raise WbError(f"429 rate limit: {url}")
     r.raise_for_status()

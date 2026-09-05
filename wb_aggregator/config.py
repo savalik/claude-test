@@ -5,6 +5,7 @@
 До этого коннектор писать рано — имена параметров и id фасетов угадывать нельзя.
 """
 
+import os
 from dataclasses import dataclass
 from typing import Optional
 
@@ -39,6 +40,13 @@ HEADERS = {
 
 PAUSE_SECONDS = 1.2      # пауза между запросами; не убирать
 REQUEST_TIMEOUT = 20
+
+# --- реверс-прокси relay (см. relay/README.md) -------------------------------
+# Если заданы обе переменные — запросы к wb.ru идут через relay на VPS с
+# российским IP вместо прямого обращения. Не задано ничего — поведение как раньше.
+
+RELAY_URL = os.environ.get("WB_RELAY_URL")      # напр. https://relay.example.com/fetch
+RELAY_TOKEN = os.environ.get("WB_RELAY_TOKEN")
 
 # --- целевые продавцы --------------------------------------------------------
 

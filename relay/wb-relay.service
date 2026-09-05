@@ -1,0 +1,14 @@
+[Unit]
+Description=wb_aggregator relay
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/wb-relay
+Environment=RELAY_TOKEN=REPLACE_ME
+ExecStart=/opt/wb-relay/.venv/bin/uvicorn server:app --host 0.0.0.0 --port 8080
+Restart=on-failure
+User=www-data
+
+[Install]
+WantedBy=multi-user.target
